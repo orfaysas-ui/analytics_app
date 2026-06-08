@@ -57,7 +57,7 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
     st.dataframe(tickets.head())
     st.write([repr(c) for c in tickets.columns])
 
-s    t.write("Aperçu tickets cid")
+    st.write("Aperçu tickets cid")
     st.dataframe(tickets_cid.head())
     st.write([repr(c) for c in tickets_cid.columns])
 
