@@ -46,8 +46,8 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
     tickets_cid = read_file(export_ticket_cid)
     hotels = read_file(hotels)
 
-    conv_dates = pd.to_datetime(conversations["createdAt"], errors="coerce")
-    ticket_dates = pd.to_datetime(tickets["Créé le"], errors="coerce")
+    conv_dates = pd.to_datetime(conversations["date"], errors="coerce")
+    ticket_dates = pd.to_datetime(tickets["date"], errors="coerce")
 
     min_data_date = max(conv_dates.min().date(), ticket_dates.min().date())
     max_data_date = min(conv_dates.max().date(), ticket_dates.max().date())
