@@ -46,7 +46,7 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
     tickets_cid = read_file(export_ticket_cid)
     hotels = read_file(hotels)
 
-    conv_dates = pd.to_datetime(conversations["started"].str.replace(" Europe/Paris", "", regex=False), errors="coerce").dt.tz_localize("Europe/Paris").dt.date
+    conv_dates = pd.to_datetime(conversations["started"].str.replace(" Europe/Paris", "", regex=False), errors="coerce").dt.tz_localize("Europe/Paris")
     ticket_dates = pd.to_datetime(tickets["Créé le"], errors="coerce")
 
     min_data_date = max(conv_dates.min().date(), ticket_dates.min().date())
