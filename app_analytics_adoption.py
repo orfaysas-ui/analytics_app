@@ -99,7 +99,9 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
             conversations,
             tickets,
             tickets_cid,
-            hotels
+            hotels,
+            start_date,
+            end_date       
         )
 
         st.success("Analyse terminée")
