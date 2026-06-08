@@ -86,7 +86,11 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels):
         (tickets.date.dt.date<=last_date_measured)
         &(tickets.date.dt.date>=tickets.launch_date)
         ]
-    conv = tab[tab.date<=last_day_ticket]
+    
+    tab["date"] = pd.to_datetime(tab["date"], errors="coerce").dt.tz_localize(None)
+    last_day_ticket = pd.to_datetime(last_day_ticket).tz_localize(None)
+
+    conv = tab[tab["date"] <= last_day_ticket]
 
     #group by conv
     hconv = conv.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv'})
