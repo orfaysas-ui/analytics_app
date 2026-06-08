@@ -46,6 +46,37 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
     tickets_cid = read_file(export_ticket_cid)
     hotels = read_file(hotels)
 
+    conv_dates = pd.to_datetime(conversations["createdAt"], errors="coerce")
+    ticket_dates = pd.to_datetime(tickets["Créé le"], errors="coerce")
+
+    min_data_date = max(conv_dates.min().date(), ticket_dates.min().date())
+    max_data_date = min(conv_dates.max().date(), ticket_dates.max().date())
+
+    start_date = st.date_input(
+        "Date de début d'analyse",
+        value=min_data_date,
+        min_value=min_data_date,
+        max_value=max_data_date
+    )
+
+    end_date = st.date_input(
+        "Date de fin d'analyse",
+        value=max_data_date,
+        min_value=min_data_date,
+        max_value=max_data_date
+    )
+
+    if start_date < min_data_date:
+        st.error(f"La date de début doit être au plus tôt le {min_data_date}.")
+        st.stop()
+
+    if end_date > max_data_date:
+        st.error(f"La date de fin doit être au plus tard le {max_data_date}.")
+        st.stop()
+
+    if start_date > end_date:
+        st.error("La date de début ne peut pas être après la date de fin.")
+        st.stop()
     
 
     st.success("Fichiers chargés")
@@ -55,11 +86,9 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
 
     st.write("Aperçu tickets")
     st.dataframe(tickets.head())
-    st.write([repr(c) for c in tickets.columns])
 
     st.write("Aperçu tickets cid")
     st.dataframe(tickets_cid.head())
-    st.write([repr(c) for c in tickets_cid.columns])
 
     st.write("Aperçu hôtels")
     st.dataframe(hotels.head())
