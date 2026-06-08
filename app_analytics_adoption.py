@@ -46,6 +46,8 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
     tickets_cid = read_file(export_ticket_cid)
     hotels = read_file(hotels)
 
+    
+
     st.success("Fichiers chargés")
 
     st.write("Aperçu conversations")
@@ -53,11 +55,11 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
 
     st.write("Aperçu tickets")
     st.dataframe(tickets.head())
-
     st.write([repr(c) for c in tickets.columns])
 
-    st.write("Aperçu tickets cid")
-    st.dataframe(tickets.head())
+s    t.write("Aperçu tickets cid")
+    st.dataframe(tickets_cid.head())
+    st.write([repr(c) for c in tickets_cid.columns])
 
     st.write("Aperçu hôtels")
     st.dataframe(hotels.head())
