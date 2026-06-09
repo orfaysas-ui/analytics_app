@@ -114,7 +114,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
 
     #merges
     hotel_adoption = hotels.merge(nb_tickets_since_launch, how='left', on='hotel_code')
-    hotel_adoption = hotels.merge(nb_tickets_selected_window, how='left', on='hotel_code')
+    hotel_adoption = hotel_adoption.merge(nb_tickets_selected_window, how='left', on='hotel_code')
     hotel_adoption = hotel_adoption.merge(nb_tickets_butler_since_launch, how='left', on='hotel_code')
     hotel_adoption = hotel_adoption.merge(nb_tickets_butler_selected_window, how='left', on='hotel_code')
     hotel_adoption = hotel_adoption.merge(hconv_since_launch, how='left', on = 'hotel_code')
