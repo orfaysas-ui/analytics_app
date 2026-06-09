@@ -30,7 +30,7 @@ def get_hotel_code(eq, tickets):
     hc_ticket = tickets[['Numéro','hotel_code']]
     return (hc_conv, hc_ticket)
 
-def get_clean_dates(e,t,h):
+def get_clean_dates(e,t,h,min,max):
     t = t.copy()
     h = h.copy()
     #get proper date
@@ -40,10 +40,12 @@ def get_clean_dates(e,t,h):
     h['launch_date']=pd.to_datetime(h['Launch date'],dayfirst = True)
 
     #nb days since launch
-    today_date = pd.Timestamp.today().date()
-    h['today_date']=pd.to_datetime(today_date)
-    h['nb_days_since_launch']=(h.today_date-h.launch_date).dt.days
+    h['max_date']=pd.to_datetime(max)
+    h['min_date']=pd.to_datetime(min)
+    h['nb_days_since_launch']=(h.max_date-h.launch_date).dt.days
+    h['nb_days_selected_window']=(h.max_date-h.launch_date).dt.days
     h['nb_weeks_since_launch']=h.nb_days_since_launch//7
+    h['nb_weeks_selected_window']=h.nb_days_selected_window//7
     dt_conv = dates[['id','date']]
     dt_tickets= t[['Numéro','date']]
     return(dt_conv,dt_tickets,h)
@@ -62,9 +64,9 @@ def remove_blank_csat (eq):
     return tab
 
 
-def adoption_analytics (eq,tickets,tickets_cid,hotels):
+def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     clean_hc = get_hotel_code(eq,tickets)
-    clean_dates = get_clean_dates(eq,tickets,hotels)
+    clean_dates = get_clean_dates(eq,tickets,hotels,min,max)
     eq = eq.merge(clean_hc[0],how='left', on = 'id')
     eq = eq.merge(clean_dates[0], how='left', on = 'id')
     print(eq.date)
@@ -82,33 +84,49 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels):
     last_day_ticket = tickets['date'].max()
 
     tickets= tickets.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
-    tickets = tickets[
-        (tickets.date.dt.date<=last_date_measured)
-        &(tickets.date.dt.date>=tickets.launch_date)
+    tickets_since_launch = tickets[
+        (tickets.date.dt.date<=max)]
+    tickets_selected_window = tickets[
+        (tickets.date.dt.date<=max)
+        &(tickets.date.dt.date>=min)
         ]
     
     tab["date"] = pd.to_datetime(tab["date"], errors="coerce").dt.tz_localize(None)
     last_day_ticket = pd.to_datetime(last_day_ticket).tz_localize(None)
 
-    conv = tab[tab["date"] <= last_day_ticket]
+    conv_since_launch = tab[tab["date"] <= max]
+    conv_selected_window = tab[(tab["date"] <= max)&(tab['date']>=min)]
+
 
     #group by conv
-    hconv = conv.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv'})
+    hconv_since_launch = conv_since_launch.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_since_launch'})
+    hconv_selected_window = conv_selected_window.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_selected_window'})
 
     #groupby ticket
-    tickets['through_butler']=tickets['Numéro'].isin(tickets_cid['Numéro'])
+    tickets_since_launch['through_butler']=tickets_since_launch['Numéro'].isin(tickets_cid['Numéro'])
+    tickets_selected_window['through_butler']=tickets_selected_window['Numéro'].isin(tickets_cid['Numéro'])
 
-    nb_tickets_tot = tickets.groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_tot'})
-    nb_tickets_butler = tickets[tickets.through_butler==True].groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler'})
+    nb_tickets_since_launch = tickets_since_launch.groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_since_launch'})
+    nb_tickets_selected_window = tickets_selected_window.groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_selected_window'})
+
+    nb_tickets_butler_since_launch = tickets_since_launch[tickets_since_launch.through_butler==True].groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_since_launch'})
+    nb_tickets_butler_selected_window = tickets_selected_window[tickets_selected_window.through_butler==True].groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_selected_window'})
 
     #merges
-    hotel_adoption = hotels.merge(nb_tickets_tot, how='left', on='hotel_code')
-    hotel_adoption = hotel_adoption.merge(nb_tickets_butler, how='left', on='hotel_code')
-    hotel_adoption = hotel_adoption.merge(hconv, how='left', on = 'hotel_code')
+    hotel_adoption = hotels.merge(nb_tickets_since_launch, how='left', on='hotel_code')
+    hotel_adoption = hotels.merge(nb_tickets_selected_window, how='left', on='hotel_code')
+    hotel_adoption = hotel_adoption.merge(nb_tickets_butler_since_launch, how='left', on='hotel_code')
+    hotel_adoption = hotel_adoption.merge(nb_tickets_butler_selected_window, how='left', on='hotel_code')
+    hotel_adoption = hotel_adoption.merge(hconv_since_launch, how='left', on = 'hotel_code')
+    hotel_adoption = hotel_adoption.merge(hconv_selected_window, how='left', on = 'hotel_code')
 
     #new metrics
-    hotel_adoption['nb_conv_per_week_since_launch']=hotel_adoption.nb_conv.fillna(0)/hotel_adoption.nb_weeks_since_launch
-    hotel_adoption['tot_nb_demands']= hotel_adoption.nb_conv.fillna(0) + hotel_adoption.nb_tickets_tot.fillna(0) - hotel_adoption.nb_tickets_butler.fillna(0)
-    hotel_adoption['adoption_rate']=hotel_adoption.nb_conv.fillna(0)/hotel_adoption.tot_nb_demands
+    hotel_adoption['nb_conv_per_week_since_launch']=hotel_adoption.nb_conv_since_launch.fillna(0)/hotel_adoption.nb_weeks_since_launch
+    hotel_adoption['nb_conv_per_week_selected_window']=hotel_adoption.nb_conv_selected_window.fillna(0)/hotel_adoption.nb_weeks_selected_window
+    hotel_adoption['tot_nb_demands_since_launch']= hotel_adoption.nb_conv_since_launch.fillna(0) + hotel_adoption.nb_tickets_since_launch.fillna(0) - hotel_adoption.nb_tickets_butler_since_launch.fillna(0)
+    hotel_adoption['tot_nb_demands_selected_window']= hotel_adoption.nb_conv_selected_window.fillna(0) + hotel_adoption.nb_tickets_selected_window.fillna(0) - hotel_adoption.nb_tickets_butler_selected_window.fillna(0)
+    hotel_adoption['adoption_rate_since_launch']=hotel_adoption.nb_conv_since_launch.fillna(0)/hotel_adoption.tot_nb_demands_since_launch
+    hotel_adoption['adoption_rate_selected_window']=hotel_adoption.nb_conv_selected_window.fillna(0)/hotel_adoption.tot_nb_demands_selected_window
+
 
     return hotel_adoption
