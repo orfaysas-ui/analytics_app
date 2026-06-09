@@ -43,7 +43,7 @@ def get_clean_dates(e,t,h,min,max):
     h['max_date']=pd.to_datetime(max)
     h['min_date']=pd.to_datetime(min)
     h['nb_days_since_launch']=(h.max_date-h.launch_date).dt.days
-    h['nb_days_selected_window']=(h.max_date-h.launch_date).dt.days
+    h['nb_days_selected_window']=(h.max_date-h.min_date).dt.days
     h['nb_weeks_since_launch']=h.nb_days_since_launch//7
     h['nb_weeks_selected_window']=h.nb_days_selected_window//7
     dt_conv = dates[['id','date']]
