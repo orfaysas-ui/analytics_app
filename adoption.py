@@ -94,8 +94,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     tab["date"] = pd.to_datetime(tab["date"], errors="coerce").dt.tz_localize(None)
     last_day_ticket = pd.to_datetime(last_day_ticket).tz_localize(None)
 
-    conv_since_launch = tab[tab["date"] <= max]
-    conv_selected_window = tab[(tab["date"] <= max)&(tab['date']>=min)]
+    conv_since_launch = tab[tab["date"].date.dt.date <= max]
+    conv_selected_window = tab[(tab["date"].date.dt.date <= max)&(tab['date'].date.dt.date>=min)]
 
 
     #group by conv
