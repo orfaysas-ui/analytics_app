@@ -95,7 +95,7 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
 
     if st.button("Lancer l'analyse"):
 
-        result = adoption.adoption_analytics(
+        global_adoption,adoption_pw = adoption.adoption_analytics(
             conversations,
             tickets,
             tickets_cid,
@@ -107,13 +107,13 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
         st.success("Analyse terminée")
 
         st.write("General adoption")
-        st.dataframe(result[0])
+        st.dataframe(global_adoption)
 
         st.write("Adoption per week")
-        st.dataframe(result[1])
+        st.dataframe(adoption_pw)
         
 
-        result[0].to_excel("General_adoption.xlsx", index=False)
+        global_adoption.to_excel("General_adoption.xlsx", index=False)
 
         with open("General_adoption.xlsx", "rb") as f:
             st.download_button(
@@ -122,7 +122,7 @@ if export_conv and export_ticket and export_ticket_cid and hotels:
                 file_name="General_adoption.xlsx"
             )
 
-        result[1].to_excel("Adoption_per_week.xlsx", index=False)
+        adoption_pw.to_excel("Adoption_per_week.xlsx", index=False)
 
         with open("Adoption_per_week.xlsx", "rb") as f:
             st.download_button(
