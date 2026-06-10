@@ -101,6 +101,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     #group by conv
     hconv_since_launch = conv_since_launch.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_since_launch'})
     hconv_selected_window = conv_selected_window.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_selected_window'})
+    hlastconv = conv_since_launch.groupby('hotel_code').date.max().reset_index().rename(columns={'id':'last_conv_date'})
 
     #groupby ticket
     tickets_since_launch['through_butler']=tickets_since_launch['Numéro'].isin(tickets_cid['Numéro'])
@@ -119,6 +120,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption = hotel_adoption.merge(nb_tickets_butler_selected_window, how='left', on='hotel_code')
     hotel_adoption = hotel_adoption.merge(hconv_since_launch, how='left', on = 'hotel_code')
     hotel_adoption = hotel_adoption.merge(hconv_selected_window, how='left', on = 'hotel_code')
+    hotel_adoption = hotel_adoption.merge(hlastconv, how='left', on = 'hotel_code')
 
     #new metrics
     hotel_adoption['nb_conv_per_week_since_launch']=hotel_adoption.nb_conv_since_launch.fillna(0)/hotel_adoption.nb_weeks_since_launch
@@ -127,6 +129,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption['tot_nb_demands_selected_window']= hotel_adoption.nb_conv_selected_window.fillna(0) + hotel_adoption.nb_tickets_selected_window.fillna(0) - hotel_adoption.nb_tickets_butler_selected_window.fillna(0)
     hotel_adoption['adoption_rate_since_launch']=hotel_adoption.nb_conv_since_launch.fillna(0)/hotel_adoption.tot_nb_demands_since_launch
     hotel_adoption['adoption_rate_selected_window']=hotel_adoption.nb_conv_selected_window.fillna(0)/hotel_adoption.tot_nb_demands_selected_window
+    hotel_adoption['nb_days_since_last_conv']=(pd.to_datetime(max)-hotel_adoption.last_conv_date).dt.days
+    hotel_adoption['nb_weeks_since_last_conv']=hotel_adoption.nb_days_since_last_conv//7
 
 
     return hotel_adoption
