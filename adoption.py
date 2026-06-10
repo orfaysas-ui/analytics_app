@@ -129,7 +129,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption['tot_nb_demands_selected_window']= hotel_adoption.nb_conv_selected_window.fillna(0) + hotel_adoption.nb_tickets_selected_window.fillna(0) - hotel_adoption.nb_tickets_butler_selected_window.fillna(0)
     hotel_adoption['adoption_rate_since_launch']=hotel_adoption.nb_conv_since_launch.fillna(0)/hotel_adoption.tot_nb_demands_since_launch
     hotel_adoption['adoption_rate_selected_window']=hotel_adoption.nb_conv_selected_window.fillna(0)/hotel_adoption.tot_nb_demands_selected_window
-    hotel_adoption['nb_days_since_last_conv']=(pd.to_datetime(max)-hotel_adoption.last_conv_date).dt.days
+    hotel_adoption['nb_days_since_last_conv']=(pd.to_datetime(max)-pd.to_datetime(hotel_adoption.last_conv_date)).dt.days
     hotel_adoption['nb_weeks_since_last_conv']=hotel_adoption.nb_days_since_last_conv//7
 
 
