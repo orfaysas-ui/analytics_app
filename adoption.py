@@ -82,7 +82,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     last_day_ticket = tickets['date'].max()
     tickets= tickets.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
 
-    tickets['nb_days_since_launch']=(pd.to_datetime(max)-pd.to_datetime('launch_date')).dt.days
+    tickets['nb_days_since_launch']=(pd.to_datetime(max)-pd.to_datetime(tickets['launch_date'])).dt.days
     tickets['nb_weeks_since_launch']= tickets['nb_days_since_launch']//7
 
     tickets_since_launch = tickets[
@@ -100,8 +100,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     tab['nb_days_since_launch']=(pd.to_datetime(tab.date)-pd.to_datetime(tab.launch_date)).dt.days
     tab['nb_weeks_since_launch']= tab['nb_days_since_launch']//7
 
-    conv_since_launch = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(launch_date))]
-    conv_selected_window = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(min))&(tab['date']>=pd.to_datetime(launch_date))]
+    conv_since_launch = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(tab.launch_date))]
+    conv_selected_window = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(min))&(tab['date']>=pd.to_datetime(tab.launch_date))]
 
 
     #group by conv
@@ -152,8 +152,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption['nb_weeks_since_last_conv']=hotel_adoption.nb_days_since_last_conv//7
 
     #new metrics adoption pw
-    hotel_adoption_pw['tot_nb_demands_pw']= hotel_adoption_pw.nb_conv_pw.fillna(0) + hotel_adoption_pw.nb_tickets_pw.fillna(0) - hotel_adoption_pw.nb_tickets_butle_pw.fillna(0)
-    hotel_adoption_pw['adoption_rate_pw']=hotel_adoption_pw.nb_conv_pw.fillna(0)/hotel_adoption.tot_nb_demands_pw
+    hotel_adoption_pw['tot_nb_demands_pw']= hotel_adoption_pw.nb_conv_pw.fillna(0) + hotel_adoption_pw.nb_tickets_pw.fillna(0) - hotel_adoption_pw.nb_tickets_butler_pw.fillna(0)
+    hotel_adoption_pw['adoption_rate_pw']=hotel_adoption_pw.nb_conv_pw.fillna(0)/hotel_adoption_pw.tot_nb_demands_pw
 
 
     return (hotel_adoption,hotel_adoption_pw)
