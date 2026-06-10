@@ -82,8 +82,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     last_day_ticket = tickets['date'].max()
     tickets= tickets.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
 
-    tickets['nb_days_since_launch']=(pd.to_datetime(max)-pd.to_datetime(tickets['launch_date'])).dt.days
-    tickets['nb_weeks_since_launch']= tickets['nb_days_since_launch']//7
+    tickets['day_nb_since_launch']=(pd.to_datetime(date)-pd.to_datetime(tickets['launch_date'])).dt.days
+    tickets['week_nb_since_launch']= tickets['day_nb_since_launch']//7
 
     tickets_since_launch = tickets[
         (tickets.date.dt.date<=max)]
@@ -97,8 +97,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
 
     tab=tab.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
 
-    tab['nb_days_since_launch']=(pd.to_datetime(tab.date)-pd.to_datetime(tab.launch_date)).dt.days
-    tab['nb_weeks_since_launch']= tab['nb_days_since_launch']//7
+    tab['day_nb_since_launch']=(pd.to_datetime(tab.date)-pd.to_datetime(tab.launch_date)).dt.days
+    tab['week_nb_since_launch']= tab['day_nb_since_launch']//7
 
     conv_since_launch = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(tab.launch_date))]
     conv_selected_window = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(min))&(tab['date']>=pd.to_datetime(tab.launch_date))]
@@ -110,7 +110,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hlastconv = conv_since_launch.groupby('hotel_code').date.max().reset_index().rename(columns={'date':'last_conv_date'})
 
     #group by conv / week
-    hconv_pw_since_launch = conv_since_launch.groupby(['hotel_code','nb_weeks_since_launch']).id.nunique().reset_index().rename(columns={'id':'nb_conv_pw'})
+    hconv_pw_since_launch = conv_since_launch.groupby(['hotel_code','week_nb_since_launch']).id.nunique().reset_index().rename(columns={'id':'nb_conv_pw'})
 
     #groupby ticket
     tickets_since_launch['through_butler']=tickets_since_launch['Numéro'].isin(tickets_cid['Numéro'])
@@ -123,8 +123,8 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     nb_tickets_butler_selected_window = tickets_selected_window[tickets_selected_window.through_butler==True].groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_selected_window'})
 
     #groupby ticket/week
-    nb_tickets_pw_since_launch = tickets_since_launch.groupby(['hotel_code','nb_weeks_since_launch'])['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_pw'})
-    nb_tickets_butler_pw_since_launch = tickets_since_launch[tickets_since_launch.through_butler==True].groupby(['hotel_code','nb_weeks_since_launch'])['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_pw'})
+    nb_tickets_pw_since_launch = tickets_since_launch.groupby(['hotel_code','week_nb_since_launch'])['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_pw'})
+    nb_tickets_butler_pw_since_launch = tickets_since_launch[tickets_since_launch.through_butler==True].groupby(['hotel_code','week_nb_since_launch'])['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_pw'})
 
     #merges adoption
     hotel_adoption = hotels.merge(nb_tickets_since_launch, how='left', on='hotel_code')
@@ -136,9 +136,9 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption = hotel_adoption.merge(hlastconv, how='left', on = 'hotel_code')
 
     #merges adoption pw
-    hotel_adoption_pw = hotels.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code','nb_weeks_since_launch'])
-    hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on=['hotel_code','nb_weeks_since_launch'])
-    hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = ['hotel_code','nb_weeks_since_launch'])
+    hotel_adoption_pw = hotels.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code'])
+    hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on=['hotel_code','week_nb_since_launch'])
+    hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = ['hotel_code','week_nb_since_launch'])
 
 
     #new metrics adoption
