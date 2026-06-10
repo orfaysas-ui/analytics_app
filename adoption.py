@@ -10,12 +10,12 @@ def get_hotel_code(eq, tickets):
     #get mask
     mask = (
         eq["hotelCode"].str.match(
-        r"^h\d{4}$",
+        r"^h(?=.*\d)[a-z0-9]{4}$",
         flags=re.IGNORECASE,
         na=False) 
     )&(~ eq.hotelCode.isna())&(eq.hotelCode != 'HXXXX')
     #get hotel codes from transcript
-    eq['hotel_code_transcript']= eq["transcript"].str.extract(r"(h\d{4})", flags=re.IGNORECASE, expand=False)
+    eq['hotel_code_transcript']= eq["transcript"].str.extract(r"^h(?=.*\d)[a-z0-9]{4}$", flags=re.IGNORECASE, expand=False)
     #get hotel codes from tid
     hotel_codes_tid = eq[mask].groupby('customerHandle').agg(
          hotel_code_tid = ('hotelCode','first')
