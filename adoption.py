@@ -16,7 +16,7 @@ def get_hotel_code(eq, tickets):
     )&(~ eq.hotelCode.isna())&(eq.hotelCode != 'HXXXX')
     #get hotel codes from transcript
     eq["hotel_code_transcript"] = eq["transcript"].str.extract(
-        r"(h(?=[a-z0-9]*\d)[a-z0-9]{4})",
+        r"\b(h(?=[a-z0-9]*\d)[a-z0-9]{4})\b",
         flags=re.IGNORECASE,
         expand=False
     )
