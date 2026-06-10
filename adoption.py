@@ -100,7 +100,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
 
     #group by conv
     hconv_since_launch = conv_since_launch.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_since_launch'})
-    hconv_selected_window = conv_selected_window.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_selected_window'})
+    hconv_selected_window = conv_selected_window.groupby('hotel_code').id.nunique().reset_index().rename(columns={'date':'nb_conv_selected_window'})
     hlastconv = conv_since_launch.groupby('hotel_code').date.max().reset_index().rename(columns={'id':'last_conv_date'})
 
     #groupby ticket
