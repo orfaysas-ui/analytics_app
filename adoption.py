@@ -136,9 +136,9 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption = hotel_adoption.merge(hlastconv, how='left', on = 'hotel_code')
 
     #merges adoption pw
-    hotel_adoption_pw = hotels.merge(nb_tickets_pw_since_launch, how='left', on='hotel_code')
-    hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on='hotel_code')
-    hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = 'hotel_code')
+    hotel_adoption_pw = hotels.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code','nb_weeks_since_launch'])
+    hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on=['hotel_code','nb_weeks_since_launch'])
+    hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = ['hotel_code','nb_weeks_since_launch'])
 
 
     #new metrics adoption
