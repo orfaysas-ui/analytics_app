@@ -73,21 +73,18 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     clean_dates = get_clean_dates(eq,tickets,hotels,min,max)
     eq = eq.merge(clean_hc[0],how='left', on = 'id')
     eq = eq.merge(clean_dates[0], how='left', on = 'id')
-    print(eq.date)
     tab = remove_blank_csat(eq)
-
     tickets = tickets.merge(clean_hc[1],how='left', on = 'Numéro')
     tickets = tickets.merge(clean_dates[1], how='left', on = 'Numéro')
-    print(tickets.date)
-    
     hotels = clean_dates[2]
-
     hotels['hotel_code']=hotels['Hotel code']
-
     last_date_measured = tab.date.max()
     last_day_ticket = tickets['date'].max()
-
     tickets= tickets.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
+
+    tickets['nb_days_since_launch']=(pd.to_datetime(max)-pd.to_datetime('launch_date')).dt.days
+    tickets['nb_weeks_since_launch']= tickets['nb_days_since_launch']//7
+
     tickets_since_launch = tickets[
         (tickets.date.dt.date<=max)]
     tickets_selected_window = tickets[
@@ -98,14 +95,22 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     tab["date"] = pd.to_datetime(tab["date"], errors="coerce").dt.tz_localize(None)
     last_day_ticket = pd.to_datetime(last_day_ticket).tz_localize(None)
 
-    conv_since_launch = tab[tab["date"] <= pd.to_datetime(max)]
-    conv_selected_window = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(min))]
+    tab=tab.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
+
+    tab['nb_days_since_launch']=(pd.to_datetime(tab.date)-pd.to_datetime(tab.launch_date)).dt.days
+    tab['nb_weeks_since_launch']= tab['nb_days_since_launch']//7
+
+    conv_since_launch = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(launch_date))]
+    conv_selected_window = tab[(tab["date"] <= pd.to_datetime(max))&(tab['date']>=pd.to_datetime(min))&(tab['date']>=pd.to_datetime(launch_date))]
 
 
     #group by conv
     hconv_since_launch = conv_since_launch.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_since_launch'})
     hconv_selected_window = conv_selected_window.groupby('hotel_code').id.nunique().reset_index().rename(columns={'id':'nb_conv_selected_window'})
     hlastconv = conv_since_launch.groupby('hotel_code').date.max().reset_index().rename(columns={'date':'last_conv_date'})
+
+    #group by conv / week
+    hconv_pw_since_launch = conv_since_launch.groupby(['hotel_code','nb_weeks_since_launch']).id.nunique().reset_index().rename(columns={'id':'nb_conv_pw'})
 
     #groupby ticket
     tickets_since_launch['through_butler']=tickets_since_launch['Numéro'].isin(tickets_cid['Numéro'])
@@ -117,7 +122,11 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     nb_tickets_butler_since_launch = tickets_since_launch[tickets_since_launch.through_butler==True].groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_since_launch'})
     nb_tickets_butler_selected_window = tickets_selected_window[tickets_selected_window.through_butler==True].groupby('hotel_code')['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_selected_window'})
 
-    #merges
+    #groupby ticket/week
+    nb_tickets_pw_since_launch = tickets_since_launch.groupby(['hotel_code','nb_weeks_since_launch'])['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_pw'})
+    nb_tickets_butler_pw_since_launch = tickets_since_launch[tickets_since_launch.through_butler==True].groupby(['hotel_code','nb_weeks_since_launch'])['Numéro'].nunique().reset_index().rename(columns={'Numéro':'nb_tickets_butler_pw'})
+
+    #merges adoption
     hotel_adoption = hotels.merge(nb_tickets_since_launch, how='left', on='hotel_code')
     hotel_adoption = hotel_adoption.merge(nb_tickets_selected_window, how='left', on='hotel_code')
     hotel_adoption = hotel_adoption.merge(nb_tickets_butler_since_launch, how='left', on='hotel_code')
@@ -126,7 +135,13 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption = hotel_adoption.merge(hconv_selected_window, how='left', on = 'hotel_code')
     hotel_adoption = hotel_adoption.merge(hlastconv, how='left', on = 'hotel_code')
 
-    #new metrics
+    #merges adoption pw
+    hotel_adoption_pw = hotels.merge(nb_tickets_pw_since_launch, how='left', on='hotel_code')
+    hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on='hotel_code')
+    hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = 'hotel_code')
+
+
+    #new metrics adoption
     hotel_adoption['nb_conv_per_week_since_launch']=hotel_adoption.nb_conv_since_launch.fillna(0)/hotel_adoption.nb_weeks_since_launch
     hotel_adoption['nb_conv_per_week_selected_window']=hotel_adoption.nb_conv_selected_window.fillna(0)/hotel_adoption.nb_weeks_selected_window
     hotel_adoption['tot_nb_demands_since_launch']= hotel_adoption.nb_conv_since_launch.fillna(0) + hotel_adoption.nb_tickets_since_launch.fillna(0) - hotel_adoption.nb_tickets_butler_since_launch.fillna(0)
@@ -136,5 +151,9 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption['nb_days_since_last_conv']=(pd.to_datetime(max)-pd.to_datetime(hotel_adoption.last_conv_date)).dt.days
     hotel_adoption['nb_weeks_since_last_conv']=hotel_adoption.nb_days_since_last_conv//7
 
+    #new metrics adoption pw
+    hotel_adoption_pw['tot_nb_demands_pw']= hotel_adoption_pw.nb_conv_pw.fillna(0) + hotel_adoption_pw.nb_tickets_pw.fillna(0) - hotel_adoption_pw.nb_tickets_butle_pw.fillna(0)
+    hotel_adoption_pw['adoption_rate_pw']=hotel_adoption_pw.nb_conv_pw.fillna(0)/hotel_adoption.tot_nb_demands_pw
 
-    return hotel_adoption
+
+    return (hotel_adoption,hotel_adoption_pw)
