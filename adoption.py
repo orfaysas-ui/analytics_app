@@ -51,6 +51,11 @@ def get_clean_dates(e,t,h,min,max):
     h['nb_weeks_since_launch']=h.nb_days_since_launch//7
     h['nb_weeks_selected_window']=h.nb_days_selected_window//7
     hpw = h.copy()
+    hpw["nb_weeks_since_launch"] = (
+        hpw["nb_weeks_since_launch"]
+        .fillna(0)
+        .astype(int)
+    )
     h_pw = (
     hpw.assign(week_nb_since_launch=hpw["nb_weeks_since_launch"].apply(lambda x: range(x + 1)))
         .explode("week_nb_since_launch")
