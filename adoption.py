@@ -82,7 +82,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     last_day_ticket = tickets['date'].max()
     tickets= tickets.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
 
-    tickets['day_nb_since_launch']=(pd.to_datetime(date)-pd.to_datetime(tickets['launch_date'])).dt.days
+    tickets['day_nb_since_launch']=(pd.to_datetime(tickets.date)-pd.to_datetime(tickets['launch_date'])).dt.days
     tickets['week_nb_since_launch']= tickets['day_nb_since_launch']//7
 
     tickets_since_launch = tickets[
