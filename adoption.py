@@ -52,8 +52,8 @@ def get_clean_dates(e,t,h,min,max):
     h['nb_weeks_selected_window']=h.nb_days_selected_window//7
     hpw = h.copy()
     hpw = (
-    hpw.assign(nb_week_since_launch=df["nb_weeks_since_launch"].apply(lambda x: range(x + 1)))
-        .explode("nb_week_since_launch")
+    hpw.assign(week_nb_since_launch=df["nb_weeks_since_launch"].apply(lambda x: range(x + 1)))
+        .explode("week_nb_since_launch")
         .reset_index(drop=True)
     )
     dt_conv = dates[['id','date']]
@@ -143,7 +143,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption = hotel_adoption.merge(hlastconv, how='left', on = 'hotel_code')
 
     #merges adoption pw
-    hotel_adoption_pw = hotelspw.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code'])
+    hotel_adoption_pw = hotelspw.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code','week_nb_since_launch']])
     hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on=['hotel_code','week_nb_since_launch'])
     hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = ['hotel_code','week_nb_since_launch'])
 
