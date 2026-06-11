@@ -50,9 +50,15 @@ def get_clean_dates(e,t,h,min,max):
     h['nb_days_selected_window']=(h.max_date-h.min_date).dt.days
     h['nb_weeks_since_launch']=h.nb_days_since_launch//7
     h['nb_weeks_selected_window']=h.nb_days_selected_window//7
+    hpw = h.copy()
+    hpw = (
+    hpw.assign(nb_week_since_launch=df["nb_weeks_since_launch"].apply(lambda x: range(x + 1)))
+        .explode("nb_week_since_launch")
+        .reset_index(drop=True)
+    )
     dt_conv = dates[['id','date']]
     dt_tickets= t[['Numéro','date']]
-    return(dt_conv,dt_tickets,h)
+    return(dt_conv,dt_tickets,h,hpw)
 
 def remove_blank_csat (eq):
     #REMOVE BLANK CONV AND SURVEY
@@ -77,6 +83,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     tickets = tickets.merge(clean_hc[1],how='left', on = 'Numéro')
     tickets = tickets.merge(clean_dates[1], how='left', on = 'Numéro')
     hotels = clean_dates[2]
+    hotelspw = clean_dates[3]
     hotels['hotel_code']=hotels['Hotel code']
     last_date_measured = tab.date.max()
     last_day_ticket = tickets['date'].max()
@@ -136,7 +143,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotel_adoption = hotel_adoption.merge(hlastconv, how='left', on = 'hotel_code')
 
     #merges adoption pw
-    hotel_adoption_pw = hotels.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code'])
+    hotel_adoption_pw = hotelspw.merge(nb_tickets_pw_since_launch, how='left', on=['hotel_code'])
     hotel_adoption_pw = hotel_adoption_pw.merge(nb_tickets_butler_pw_since_launch, how='left', on=['hotel_code','week_nb_since_launch'])
     hotel_adoption_pw = hotel_adoption_pw.merge(hconv_pw_since_launch, how='left', on = ['hotel_code','week_nb_since_launch'])
 
