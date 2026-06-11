@@ -90,6 +90,7 @@ def adoption_analytics (eq,tickets,tickets_cid,hotels,min,max):
     hotels = clean_dates[2]
     hotelspw = clean_dates[3]
     hotels['hotel_code']=hotels['Hotel code']
+    hotelspw['hotel_code']=hotelspw['Hotel code']
     last_date_measured = tab.date.max()
     last_day_ticket = tickets['date'].max()
     tickets= tickets.merge(hotels[['hotel_code','launch_date']], how='left', on = 'hotel_code')
