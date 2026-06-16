@@ -8,18 +8,6 @@ def clean_dates(d):
     r['year']=pd.to_datetime(r.date).dt.year
     r['month']=pd.to_datetime(r.date).dt.month
     return r
-    
-def get_hotel_code(d):
-    r = d.groupby('Conversation ID')['Hotel Code'].first().reset_index().rename(columns={'Hotel Code':'hotel_code','Conversation ID':'id'})
-    return r
-
-def get_topic(d):
-    r = d.groupby('Conversation ID')['Topic'].first().reset_index().rename(columns={'Topic':'topic','Conversation ID':'id'})
-    return r
-
-def is_blank(d):
-    r = d[d.Question=='BLANK']
-    return r
 
 
 def get_thumb(x):
